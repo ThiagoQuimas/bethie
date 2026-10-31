@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bethiê | Gestão</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+ --rose:#bd8294;--rose-dark:#9e6377;--rose-light:#f6e9ed;
+ --beige:#fbf7f1;--beige-2:#f1e8dc;--brown:#60483f;
+ --text:#493b36;--muted:#8d7c75;--line:#eadbd5;--white:#fff;
+ --green:#527d60;--red:#a65353;--shadow:0 8px 28px rgba(96,72,63,.07)
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--beige);color:var(--text);font:15px/1.5 Arial,Helvetica,sans-serif}
+header{background:linear-gradient(115deg,#f3e0e6,#fbf5ed);border-bottom:1px solid var(--line);padding:20px max(22px,calc((100% - 1180px)/2))}
+.brand{font:34px Georgia,serif;letter-spacing:1px;color:var(--rose-dark)}
+.tagline{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.container{max-width:1180px;margin:28px auto;padding:0 20px}
+.topline{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:22px}
+h1,h2,h3{font-family:Georgia,serif;font-weight:500;color:var(--brown);margin:0 0 7px}
+h1{font-size:30px}h2{font-size:23px}h3{font-size:18px}
+p{margin:0;color:var(--muted)}
+.pill{background:#fff;border:1px solid var(--line);border-radius:30px;padding:7px 12px;color:var(--muted);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.stat,.panel{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:19px;box-shadow:var(--shadow)}
+.stat span{display:block;color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.stat strong{display:block;font:27px Georgia,serif;color:var(--rose-dark);margin-top:4px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+.tab{border:1px solid var(--line);background:#fff;color:var(--brown);padding:10px 17px;border-radius:25px;cursor:pointer;font-weight:600}
+.tab.active,.btn{background:var(--rose);color:white;border-color:var(--rose)}
+.tab:hover{border-color:var(--rose)}
+.grid{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(380px,1.2fr);gap:17px}
+.panel{margin-bottom:17px}
+.panel>p{margin-bottom:13px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:11px 0 5px}
+input,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;background:#fff;color:var(--text);font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--rose);box-shadow:0 0 0 3px #bd82941c}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:1px solid var(--rose);border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;margin-top:14px}
+.btn:hover{background:var(--rose-dark)}
+.btn.secondary{background:var(--rose-light);color:var(--rose-dark);border-color:var(--rose-light)}
+.btn.danger{background:#fff1ef;color:var(--red);border-color:#f4d9d5}
+.btn.mini{padding:6px 9px;margin:0;font-size:12px}
+.full{width:100%}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #f1e9e5;font-size:13px;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+td strong{color:var(--brown)}
+.right{text-align:right}
+.muted{color:var(--muted)}
+.empty{padding:25px 15px;text-align:center;background:#fcf9f7;border-radius:11px;color:var(--muted)}
+.notice{padding:11px 14px;border-radius:9px;margin-bottom:14px;background:#edf5ee;color:var(--green)}
+.error{padding:11px 14px;border-radius:9px;margin-bottom:14px;background:#fff0ed;color:var(--red)}
+.hidden{display:none!important}
+.recipe-card{border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 12px}
+.recipe-top{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.cost{font:23px Georgia,serif;color:var(--rose-dark);white-space:nowrap}
+.ingredient{font-size:13px;color:var(--muted);padding:5px 0}
+.summary{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;gap:10px}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.help{font-size:12px;color:var(--muted);margin-top:6px}
+footer{text-align:center;padding:24px;color:#aa9992;font-size:12px}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--brown);color:white;padding:12px 17px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:5}
+@media(max-width:760px){
+ .container{padding:0 13px;margin:20px auto}.grid{grid-template-columns:1fr}
+ .stats{grid-template-columns:1fr 1fr}.stat:last-child{grid-column:span 2}
+ .topline{display:block}.pill{display:inline-block;margin-top:12px}
+ .panel{padding:15px}table{min-width:560px}.table-wrap{overflow-x:auto}
+ h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">Bethiê</div>
+ <div class="tagline">gestão delicada, negócio organizado</div>
+</header>
+<section id="loginPanel" class="container" style="max-width:460px">
+ <div class="panel"><h2>Acessar Bethiê</h2><p>Entre com o e-mail e a senha cadastrados no Supabase.</p>
+ <form id="loginForm"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="voce@exemplo.com">
+ <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" required>
+ <button class="btn full" type="submit">Entrar</button></form><div id="loginMessage" class="help" aria-live="polite"></div></div>
+</section>
+<div id="appArea" class="hidden">
+<main class="container">
+ <div class="topline">
+  <div><h1>Olá! Vamos cuidar da Bethiê?</h1><p>Organize seus insumos, receitas e custos em um só lugar.</p></div>
+  <span class="pill" id="connectionStatus">Conectando ao banco...</span>
+ </div>
+ <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px"><span class="pill" id="userEmail"></span><button class="btn mini secondary" id="logoutBtn" type="button">Sair</button></div>
+ <div id="message" aria-live="polite"></div>
+ <section class="stats">
+  <div class="stat"><span>Insumos cadastrados</span><strong id="statIngredients">0</strong></div>
+  <div class="stat"><span>Receitas cadastradas</span><strong id="statRecipes">0</strong></div>
+  <div class="stat"><span>Total investido em insumos cadastrados</span><strong id="statSpent">R$ 0,00</strong></div>
+ </section>
+ <nav>
+  <button class="tab active" data-tab="insumos">Insumos e compras</button>
+  <button class="tab" data-tab="receitas">Receitas e custos</button>
+  <button class="tab" data-tab="backup">Backup dos dados</button>
+ </nav>
+
+ <section id="insumos" class="tab-content">
+  <div class="grid">
+   <div class="panel">
+    <h2>Cadastrar insumo</h2><p>Informe a quantidade da embalagem comprada e quanto pagou.</p>
+    <form id="ingredientForm">
+     <label for="ingredientName">Nome do produto</label>
+     <input id="ingredientName" required maxlength="80" placeholder="Ex.: Farinha de trigo">
+     <div class="two">
+      <div><label for="ingredientQty">Quantidade comprada</label><input id="ingredientQty" type="number" min="0.001" step="any" required placeholder="1000"></div>
+      <div><label for="ingredientUnit">Unidade</label><select id="ingredientUnit"><option value="g">Gramas (g)</option><option value="kg">Quilogramas (kg)</option><option value="ml">Mililitros (ml)</option><option value="l">Litros (L)</option><option value="un">Unidades (un)</option></select></div>
+     </div>
+     <label for="ingredientPrice">Valor total pago (R$)</label><input id="ingredientPrice" type="number" min="0" step="0.01" required placeholder="5,00">
+     <div class="help">O sistema converte kg em g e litros em ml automaticamente para calcular o custo.</div>
+     <button class="btn full" type="submit">Salvar insumo</button>
+    </form>
+   </div>
+   <div class="panel">
+    <h2>Insumos cadastrados</h2><p>O custo unitário é calculado a partir do preço e do conteúdo da embalagem.</p>
+    <div id="ingredientList"></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="receitas" class="tab-content hidden">
+  <div class="grid">
+   <div class="panel">
+    <h2>Cadastrar receita</h2><p>Escolha os ingredientes e informe a quantidade utilizada.</p>
+    <form id="recipeForm">
+     <label for="recipeName">Nome da receita</label><input id="recipeName" required maxlength="100" placeholder="Ex.: Bolo de chocolate">
+     <div class="two">
+      <div><label for="yieldQty">Rendimento</label><input id="yieldQty" type="number" min="0.001" step="any" value="1" required></div>
+      <div><label for="yieldUnit">Unidade do rendimento</label><select id="yieldUnit"><option value="un">Unidades</option><option value="porção">Porções</option><option value="g">Gramas (g)</option><option value="kg">Quilogramas (kg)</option></select></div>
+     </div>
+     <div id="recipeRows"></div>
+     <button class="btn secondary" type="button" id="addIngredientRow">+ Adicionar ingrediente</button>
+     <button class="btn full" type="submit">Salvar receita e calcular custo</button>
+    </form>
+    <div class="help">A unidade usada na receita deve ser compatível com o insumo: g com g, ml com ml e unidade com unidade. O sistema converte automaticamente kg/g e L/ml.</div>
+   </div>
+   <div class="panel">
+    <h2>Receitas cadastradas</h2><p>Veja o custo total e o custo por unidade de rendimento.</p>
+    <div id="recipeList"></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="backup" class="tab-content hidden">
+  <div class="panel">
+   <h2>Backup e restauração</h2>
+   <p>Exporte uma cópia dos seus insumos e receitas para guardar ou importar em outro navegador.</p>
+   <button class="btn" id="exportBtn">Baixar backup (.json)</button>
+   <label for="importFile">Restaurar backup</label><input type="file" id="importFile" accept=".json,application/json">
+   <button class="btn secondary" id="clearBtn">Apagar todos os dados</button>
+   <div class="help">Atenção: os dados ficam salvos apenas neste navegador e neste computador. Faça backups regularmente.</div>
+  </div>
+ </section>
+</main>
+</div>
+<footer>Bethiê · Gestão compartilhada · Feito para apoiar seu negócio</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+// Configuração do projeto Bethiê. A Publishable Key é própria para uso no navegador.
+const SUPABASE_URL = 'https://scbhcwysomtccnpifydt.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2ZZQLAzSwDWjiFKpRRX5pQ_tC_WQ8qN';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+let state = {ingredients:[], recipes:[]};
+let currentUser = null;
+const loginPanel=document.getElementById('loginPanel'), appArea=document.getElementById('appArea');
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function fmt(v){return Number(v).toLocaleString('pt-BR',{maximumFractionDigits:3});}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function baseUnit(unit){return unit==='kg'?'g':unit==='l'?'ml':unit;}
+function toBase(qty,unit){return unit==='kg'||unit==='l'?qty*1000:qty;}
+function displayBase(unit){return baseUnit(unit);}
+function showMessage(msg,error=false){const el=document.getElementById('message');el.innerHTML=`<div class="${error?'error':'notice'}">${escapeHTML(msg)}</div>`;window.scrollTo({top:0,behavior:'smooth'});}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',2400);}
+function ingredientCost(item,qty,unit){const expected=baseUnit(item.unit),received=baseUnit(unit);if(expected!==received)throw new Error(`Unidade incompatível para ${item.name}. Use ${expected}.`);return Number(item.price)/toBase(Number(item.quantity),item.unit)*toBase(Number(qty),unit);}
+function setLoggedIn(user){currentUser=user;loginPanel.classList.toggle('hidden',!!user);appArea.classList.toggle('hidden',!user);document.getElementById('userEmail').textContent=user?.email||'';document.getElementById('connectionStatus').textContent='Dados sincronizados na nuvem';}
+async function loadData(){
+ const [ingRes,recRes,itemRes]=await Promise.all([
+  db.from('ingredients').select('*').order('created_at',{ascending:true}),
+  db.from('recipes').select('*').order('created_at',{ascending:true}),
+  db.from('recipe_items').select('*')
+ ]);
+ for(const r of [ingRes,recRes,itemRes])if(r.error)throw r.error;
+ state.ingredients=ingRes.data.map(i=>({id:i.id,name:i.name,quantity:Number(i.purchase_quantity),unit:i.purchase_unit,price:Number(i.purchase_price)}));
+ state.recipes=recRes.data.map(r=>({id:r.id,name:r.name,yieldQty:Number(r.yield_quantity),yieldUnit:r.yield_unit,items:itemRes.data.filter(x=>x.recipe_id===r.id).map(x=>({ingredientId:x.ingredient_id,quantity:Number(x.quantity_used),unit:x.unit_used}))}));
+ render();
+}
+function render(){document.getElementById('statIngredients').textContent=state.ingredients.length;document.getElementById('statRecipes').textContent=state.recipes.length;document.getElementById('statSpent').textContent=money(state.ingredients.reduce((s,i)=>s+Number(i.price),0));renderIngredients();renderRecipeRows();renderRecipes();}
+function renderIngredients(){const root=document.getElementById('ingredientList');if(!state.ingredients.length){root.innerHTML='<div class="empty">Nenhum insumo cadastrado. Comece pela farinha, ovos, açúcar...</div>';return;}root.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Produto</th><th>Embalagem</th><th>Valor pago</th><th>Custo por base</th><th></th></tr></thead><tbody>${state.ingredients.map(i=>{const b=toBase(Number(i.quantity),i.unit),u=displayBase(i.unit);return `<tr><td><strong>${escapeHTML(i.name)}</strong></td><td>${fmt(i.quantity)} ${i.unit}</td><td>${money(i.price)}</td><td>${money(Number(i.price)/b)} / ${u}</td><td><button class="btn mini danger" onclick="deleteIngredient('${i.id}')">Excluir</button></td></tr>`;}).join('')}</tbody></table></div>`;}
+function renderRecipeRows(){const root=document.getElementById('recipeRows');if(!root)return;if(!state.ingredients.length){root.innerHTML='<div class="empty">Cadastre insumos antes de montar uma receita.</div>';return;}if(!root.children.length)addRecipeRow();}
+function addRecipeRow(){const root=document.getElementById('recipeRows');if(!state.ingredients.length){toast('Cadastre um insumo primeiro.');return;}const div=document.createElement('div');div.className='recipe-row';const options=state.ingredients.map(i=>`<option value="${i.id}">${escapeHTML(i.name)} (${baseUnit(i.unit)})</option>`).join('');div.innerHTML=`<div class="two"><div><label>Ingrediente</label><select class="row-ingredient">${options}</select></div><div><label>Quantidade utilizada</label><input class="row-quantity" type="number" min="0.001" step="any" required placeholder="Ex.: 250"></div></div>`;root.appendChild(div);}
+function renderRecipes(){const root=document.getElementById('recipeList');if(!state.recipes.length){root.innerHTML='<div class="empty">Suas receitas e custos aparecerão aqui.</div>';return;}root.innerHTML=state.recipes.map(r=>{const details=r.items.map(it=>{const ing=state.ingredients.find(i=>i.id===it.ingredientId);if(!ing)return null;try{return {name:ing.name,qty:it.quantity,unit:it.unit,cost:ingredientCost(ing,it.quantity,it.unit)};}catch(e){return null;}}).filter(Boolean);const total=details.reduce((s,x)=>s+x.cost,0);return `<article class="recipe-card"><div class="recipe-top"><div><h3>${escapeHTML(r.name)}</h3><div class="muted">Rendimento: ${fmt(r.yieldQty)} ${escapeHTML(r.yieldUnit)}</div></div><div class="cost">${money(total)}</div></div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin-top:12px">Custo dos ingredientes</div>${details.map(d=>`<div class="ingredient">${escapeHTML(d.name)} · ${fmt(d.qty)} ${escapeHTML(d.unit)} <span style="float:right">${money(d.cost)}</span></div>`).join('')}<div class="summary"><strong>Custo por ${escapeHTML(r.yieldUnit==='un'?'unidade':r.yieldUnit)}</strong><strong>${money(total/Number(r.yieldQty))}</strong></div><div class="row-actions" style="margin-top:12px"><button class="btn mini danger" onclick="deleteRecipe('${r.id}')">Excluir receita</button></div></article>`;}).join('');}
+function uuid(){return crypto.randomUUID();}
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const msg=document.getElementById('loginMessage');msg.textContent='Entrando...';const {data,error}=await db.auth.signInWithPassword({email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});if(error){msg.textContent='Não foi possível entrar: '+error.message;return;}await onSession(data.session);});
+async function onSession(session){if(!session){setLoggedIn(null);return;}setLoggedIn(session.user);try{await loadData();}catch(e){showMessage('Falha ao carregar dados do Supabase: '+e.message,true);}}
+db.auth.onAuthStateChange((_event,session)=>{if(session&&session.user.id!==currentUser?.id)onSession(session);else if(!session)setLoggedIn(null);});
+document.getElementById('logoutBtn').addEventListener('click',async()=>{const {error}=await db.auth.signOut();if(error)showMessage(error.message,true);});
+document.getElementById('ingredientForm').addEventListener('submit',async e=>{e.preventDefault();const name=document.getElementById('ingredientName').value.trim(),quantity=Number(document.getElementById('ingredientQty').value),unit=document.getElementById('ingredientUnit').value,price=Number(document.getElementById('ingredientPrice').value);if(!name||quantity<=0||price<0)return showMessage('Confira os dados do insumo.',true);const {error}=await db.from('ingredients').insert({name,purchase_quantity:quantity,purchase_unit:unit,purchase_price:price,created_by:currentUser.id});if(error)return showMessage('Erro ao salvar insumo: '+error.message,true);e.target.reset();await loadData();showMessage('Insumo salvo e sincronizado com a nuvem.');});
+document.getElementById('addIngredientRow').addEventListener('click',addRecipeRow);
+document.getElementById('recipeForm').addEventListener('submit',async e=>{e.preventDefault();const name=document.getElementById('recipeName').value.trim(),yieldQty=Number(document.getElementById('yieldQty').value),yieldUnit=document.getElementById('yieldUnit').value;const rows=[...document.querySelectorAll('.recipe-row')];const items=rows.map(row=>({ingredientId:row.querySelector('.row-ingredient').value,quantity:Number(row.querySelector('.row-quantity').value),unit:baseUnit(state.ingredients.find(i=>i.id===row.querySelector('.row-ingredient').value)?.unit||'g')}));if(!name||yieldQty<=0||!items.length||items.some(i=>!i.quantity||i.quantity<=0))return showMessage('Preencha o nome, o rendimento e a quantidade de cada ingrediente.',true);try{items.forEach(it=>ingredientCost(state.ingredients.find(i=>i.id===it.ingredientId),it.quantity,it.unit));}catch(err){return showMessage(err.message,true);}const recipeId=uuid();const {error:recipeError}=await db.from('recipes').insert({id:recipeId,name,yield_quantity:yieldQty,yield_unit:yieldUnit,created_by:currentUser.id});if(recipeError)return showMessage('Erro ao salvar receita: '+recipeError.message,true);const rowsToInsert=items.map(it=>({recipe_id:recipeId,ingredient_id:it.ingredientId,quantity_used:it.quantity,unit_used:it.unit}));const {error:itemError}=await db.from('recipe_items').insert(rowsToInsert);if(itemError){await db.from('recipes').delete().eq('id',recipeId);return showMessage('Erro ao salvar ingredientes da receita: '+itemError.message,true);}e.target.reset();document.getElementById('recipeRows').innerHTML='';await loadData();showMessage('Receita salva e custo calculado.');});
+window.deleteIngredient=async id=>{if(state.recipes.some(r=>r.items.some(i=>i.ingredientId===id)))return showMessage('Este insumo está em uma receita. Exclua ou atualize a receita antes de removê-lo.',true);if(confirm('Deseja excluir este insumo?')){const {error}=await db.from('ingredients').delete().eq('id',id);if(error)return showMessage('Erro ao excluir: '+error.message,true);await loadData();toast('Insumo excluído.');}};
+window.deleteRecipe=async id=>{if(confirm('Deseja excluir esta receita?')){const {error}=await db.from('recipes').delete().eq('id',id);if(error)return showMessage('Erro ao excluir: '+error.message,true);await loadData();toast('Receita excluída.');}};
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.tab-content').forEach(s=>s.classList.toggle('hidden',s.id!==btn.dataset.tab));}));
+document.getElementById('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='backup-bethie.json';a.click();URL.revokeObjectURL(url);toast('Backup exportado.');});
+document.getElementById('importFile').addEventListener('change',()=>showMessage('A restauração de backup local será adaptada para a nuvem em uma próxima etapa. Não importe por enquanto.',true));
+document.getElementById('clearBtn').addEventListener('click',()=>showMessage('Para segurança, a exclusão em massa será disponibilizada em uma etapa posterior.',true));
+(async()=>{const {data:{session}}=await db.auth.getSession();if(session)await onSession(session);else setLoggedIn(null);})();
+</script>
+</body>
+</html>
